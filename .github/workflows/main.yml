@@ -11,6 +11,7 @@ on:
       - '**.md'
     branches:
       - master
+      - libdatachannel
 
 jobs:
   ffmpeg-build:
