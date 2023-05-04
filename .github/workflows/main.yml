@@ -82,9 +82,13 @@ jobs:
           target='${{ matrix.target }}'
           artifact_name="ffmpeg-${target}-${{ github.sha }}"
           file_name="${target%%-*}-ffmpeg-$(date +"%Y-%m-%d")-${target##*-}.tar.xz"
+          dsym_artifact_name="ffmpeg-${target}-dSYMs-${{ github.sha }}"
+          dsym_file_name="${target%%-*}-ffmpeg-$(date +"%Y-%m-%d")-${target##*-}-dSYMs.tar.xz"
 
           echo "artifactName=${artifact_name}" >> $GITHUB_OUTPUT
           echo "artifactFileName=${file_name}" >> $GITHUB_OUTPUT
+          echo "dsymArtifactName=${dsym_artifact_name}" >> $GITHUB_OUTPUT
+          echo "dsymArtifactFileName=${dsym_file_name}" >> $GITHUB_OUTPUT
           echo "ccacheDate=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
 
       - name: Restore Compilation Cache
@@ -121,6 +125,13 @@ jobs:
           name: ${{ steps.setup.outputs.artifactName }}
           path: ${{ github.workspace }}/${{ matrix.target }}/${{ steps.setup.outputs.artifactFileName }}
 
+      - name: Publish Debug Symbol Artifacts
+        if: ${{ startsWith(matrix.os, 'macos') && success() && (github.event_name != 'pull_request' || steps.seekingTesters.outputs.found == 'true') }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.setup.outputs.dsymArtifactName }}
+          path: ${{ github.workspace }}/${{ matrix.target }}/${{ steps.setup.outputs.dsymArtifactFileName }}
+
   ffmpeg-package-universal:
     name: 'Build FFmpeg (Universal)'
     runs-on: macos-12
@@ -146,6 +157,14 @@ jobs:
           arm64: 'ffmpeg-macos-arm64-${{ github.sha }}'
           x86_64: 'ffmpeg-macos-x86_64-${{ github.sha }}'
           outputName: 'ffmpeg-macos-universal-${{ github.sha }}'
+
+      - name: Create universal dSYM package
+        if: ${{ success() && (github.event_name != 'pull_request' || steps.seekingTesters.outputs.found == 'true') }}
+        uses: ./.github/actions/create-universal
+        with:
+          arm64: 'ffmpeg-macos-arm64-dSYMs-${{ github.sha }}'
+          x86_64: 'ffmpeg-macos-x86_64-dSYMs-${{ github.sha }}'
+          outputName: 'ffmpeg-macos-universal-dSYMs-${{ github.sha }}'
 
   macos-build:
     name: 'Build macOS Dependencies'
@@ -184,9 +203,13 @@ jobs:
           target='${{ matrix.target }}'
           artifact_name="deps-${target}-${{ github.sha }}"
           file_name="${target%%-*}-deps-$(date +"%Y-%m-%d")-${target##*-}.tar.xz"
+          dsym_artifact_name="deps-${target}-dSYMs-${{ github.sha }}"
+          dsym_file_name="${target%%-*}-deps-$(date +"%Y-%m-%d")-${target##*-}-dSYMs.tar.xz"
 
           echo "artifactName=${artifact_name}" >> $GITHUB_OUTPUT
           echo "artifactFileName=${file_name}" >> $GITHUB_OUTPUT
+          echo "dsymArtifactName=${dsym_artifact_name}" >> $GITHUB_OUTPUT
+          echo "dsymArtifactFileName=${dsym_file_name}" >> $GITHUB_OUTPUT
           echo "ccacheDate=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
 
       - name: Restore Compilation Cache
@@ -223,6 +246,13 @@ jobs:
           name: ${{ steps.setup.outputs.artifactName }}
           path: ${{ github.workspace }}/${{ matrix.target }}/${{ steps.setup.outputs.artifactFileName }}
 
+      - name: Publish Debug Symbol Artifacts
+        if: ${{ success() && (github.event_name != 'pull_request' || steps.seekingTesters.outputs.found == 'true') }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.setup.outputs.dsymArtifactName }}
+          path: ${{ github.workspace }}/${{ matrix.target }}/${{ steps.setup.outputs.dsymArtifactFileName }}
+
   macos-package-universal:
     name: 'Build macOS Dependencies (Universal)'
     runs-on: macos-12
@@ -248,6 +278,14 @@ jobs:
           arm64: 'deps-macos-arm64-${{ github.sha }}'
           x86_64: 'deps-macos-x86_64-${{ github.sha }}'
           outputName: 'deps-macos-universal-${{ github.sha }}'
+
+      - name: Create universal dSYM package
+        if: ${{ success() && (github.event_name != 'pull_request' || steps.seekingTesters.outputs.found == 'true') }}
+        uses: ./.github/actions/create-universal
+        with:
+          arm64: 'deps-macos-arm64-dSYMs-${{ github.sha }}'
+          x86_64: 'deps-macos-x86_64-dSYMs-${{ github.sha }}'
+          outputName: 'deps-macos-universal-dSYMs-${{ github.sha }}'
 
   macos-qt5-build:
     name: 'Build macOS Qt5'
@@ -375,9 +413,13 @@ jobs:
           target='macos-universal'
           artifact_name="qt6-${target}-${{ github.sha }}"
           file_name="${target%%-*}-deps-qt6-$(date +"%Y-%m-%d")-${target##*-}.tar.xz"
+          dsym_artifact_name="qt6-${target}-dSYMs-${{ github.sha }}"
+          dsym_file_name="${target%%-*}-deps-qt6-$(date +"%Y-%m-%d")-${target##*-}-dSYMs.tar.xz"
 
           echo "artifactName=${artifact_name}" >> $GITHUB_OUTPUT
           echo "artifactFileName=${file_name}" >> $GITHUB_OUTPUT
+          echo "dsymArtifactName=${dsym_artifact_name}" >> $GITHUB_OUTPUT
+          echo "dsymArtifactFileName=${dsym_file_name}" >> $GITHUB_OUTPUT
           echo "ccacheDate=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
 
       - name: Restore Compilation Cache
@@ -414,6 +456,13 @@ jobs:
           name: ${{ steps.setup.outputs.artifactName }}
           path: ${{ github.workspace }}/macos-universal/${{ steps.setup.outputs.artifactFileName }}
 
+      - name: Publish Debug Symbol Artifacts
+        if: ${{ success() && (github.event_name != 'pull_request' || steps.seekingTesters.outputs.found == 'true') }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.setup.outputs.dsymArtifactName }}
+          path: ${{ github.workspace }}/macos-universal/${{ steps.setup.outputs.dsymArtifactFileName }}
+
   macos-qt6-package:
     name: 'Build macOS Qt6 (${{ matrix.target }})'
     runs-on: macos-12
@@ -448,6 +497,14 @@ jobs:
           base: 'qt6-macos-universal-${{ github.sha }}'
           target: '${{ matrix.target }}'
           outputName: 'qt6-${{ matrix.target }}-${{ github.sha }}'
+
+      - name: Create single architecture dSYM package
+        if: ${{ success() && (github.event_name != 'pull_request' || steps.seekingTesters.outputs.found == 'true') }}
+        uses: ./.github/actions/create-single-arch
+        with:
+          base: 'qt6-macos-universal-dSYMs-${{ github.sha }}'
+          target: '${{ matrix.target }}'
+          outputName: 'qt6-${{ matrix.target }}-dSYMs-${{ github.sha }}'
 
   windows-build:
     name: 'Build Windows Dependencies'
