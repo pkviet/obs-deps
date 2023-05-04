@@ -81,7 +81,7 @@ patch() {
   for patch (${patches}) {
     read _target _url _hash <<< "${patch}"
 
-    if [[ "${target%%-*}" == ${~_target} ]] apply_patch "${_url}" "${_hash}"
+    if [[ ${target%%-*} == ${~_target} ]] apply_patch ${_url} ${_hash}
   }
 }
 
@@ -90,13 +90,13 @@ config() {
 
   local _onoff=(OFF ON)
   local -a common_cmake_flags=(
-    ${cmake_flags}
+    ${cmake_flags//-std=c17/}
     -DBUILD_SHARED_LIBS="${_onoff[(( shared_libs + 1 ))]}"
     -DFEATURE_rpath="${_onoff[(( shared_libs + 1 ))]}"
   )
   if (( ${+commands[ccache]} )) common_cmake_flags+=(-DQT_USE_CCACHE=ON)
 
-  if [[ ${CPUTYPE} != "${arch}" && ${host_os} == 'macos' ]] {
+  if [[ ${CPUTYPE} != ${arch} && ${host_os} == macos ]] {
     unset VCPKG_ROOT
     if ! /usr/bin/pgrep -q oahd; then
       local -A other_arch=(arm64 x86_64 x86_64 arm64)
@@ -104,7 +104,7 @@ config() {
     fi
   }
 
-  if [[ ${config} == 'RelWithDebInfo' ]] common_cmake_flags+=(-DFEATURE_separate_debug_info=ON)
+  if (( shared_libs)) && [[ ${config} == Release ]] common_cmake_flags+=(-DFEATURE_separate_debug_info=ON -DQT_FEATURE_force_debug_info=ON)
 
   args=(
     ${common_cmake_flags}
@@ -142,7 +142,7 @@ config() {
   log_info "Config qtbase (%F{3}${target}%f)"
   pushd ${dir}/qtbase
   log_debug "CMake configuration options: ${args}'"
-  progress cmake -S . -B "build_${arch}" -G Ninja ${args}
+  progress cmake -S . -B build_${arch} -G Ninja ${args}
   popd
 }
 
@@ -153,8 +153,8 @@ build() {
   pushd ${dir}/qtbase
 
   args=(
-    --build "build_${arch}"
-    --config "${config}"
+    --build build_${arch}
+    --config ${config}
   )
 
   if (( _loglevel > 1 )) args+=(--verbose)
@@ -169,11 +169,11 @@ install() {
   log_info "Install qtbase (%F{3}${target}%f)"
 
   args=(
-    --install "build_${arch}"
-    --config "${config}"
+    --install build_${arch}
+    --config ${config}
   )
 
-  if [[ "${config}" =~ "Release|MinSizeRel" ]] args+=(--strip)
+  if [[ ${config} == (Release|MinSizeRel) ]] args+=(--strip)
   if (( _loglevel > 1 )) args+=(--verbose)
 
   pushd ${dir}/qtbase
@@ -193,14 +193,14 @@ qt_add_submodules() {
     -DQT_USE_CCACHE=ON
   )
 
-  if [[ ${CPUTYPE} != "${arch}" && ${host_os} == 'macos' ]] {
+  if [[ ${CPUTYPE} != ${arch} && ${host_os} == macos ]] {
     if ! /usr/bin/pgrep -q oahd; then
       local -A other_arch=(arm64 x86_64 x86_64 arm64)
       common_cmake_flags+=(-DCMAKE_OSX_ARCHITECTURES="${CPUTYPE};${other_arch[${CPUTYPE}]}")
     fi
   }
 
-  if [[ ${config} == 'RelWithDebInfo' ]] common_cmake_flags+=(-DFEATURE_separate_debug_info=ON)
+  if (( shared_libs)) && [[ ${config} == Release ]] common_cmake_flags+=(-DFEATURE_separate_debug_info=ON)
 
   for component (${qt_components[2,-1]}) {
     if ! (( ${skips[(Ie)all]} + ${skips[(Ie)build]} )) {
@@ -211,12 +211,12 @@ qt_add_submodules() {
 
       pushd ${dir}/${component}
       log_debug "CMake configuration options: ${_args}'"
-      progress cmake -S . -B "build_${arch}" -G Ninja ${_args}
+      progress cmake -S . -B build_${arch} -G Ninja ${_args}
 
       log_info "Build ${component} (%F{3}${target}%f)"
       args=(
-        --build "build_${arch}"
-        --config "${config}"
+        --build build_${arch}
+        --config ${config}
       )
 
       if (( _loglevel > 1 )) args+=(--verbose)
@@ -228,11 +228,11 @@ qt_add_submodules() {
     pushd ${dir}/${component}
 
     args=(
-      --install "build_${arch}"
-      --config "${config}"
+      --install build_${arch}
+      --config ${config}
     )
 
-    if [[ "${config}" =~ "Release|MinSizeRel" ]] args+=(--strip)
+    if [[ ${config} == (Release|MinSizeRel) ]] args+=(--strip)
     if (( _loglevel > 1 )) args+=(--verbose)
 
     log_info "Install ${component} (%F{3}${target}%f)"
@@ -244,7 +244,7 @@ qt_add_submodules() {
 
 fixup() {
   if [[ \
-    ${CPUTYPE} != "${arch}" && \
+    ${CPUTYPE} != ${arch} && \
     ${target} =~ "macos-[arm64|x86_64]" \
     ]] && ! /usr/bin/pgrep -q oahd; then
     local file
