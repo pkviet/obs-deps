@@ -16,8 +16,14 @@ local -A hashes=(
 local -a patches=(
   "macos ${0:a:h}/patches/mbedtls/0001-enable-posix-threading-support.patch \
     ea52cf47ca01211cbadf03c0493986e8d4e0d1e9ab4aaa42365b2dea7b591188"
+  "macos ${0:a:h}/patches/mbedtls/0002-enable-dtls-srtp-support.patch \
+    bca47a5a51ef32f562b470fa330876862c6bc29c89b4c16ae2ea1edc46f703cb"
   "linux ${0:a:h}/patches/mbedtls/0001-enable-posix-threading-support.patch \
     ea52cf47ca01211cbadf03c0493986e8d4e0d1e9ab4aaa42365b2dea7b591188"
+  "linux ${0:a:h}/patches/mbedtls/0002-enable-dtls-srtp-support.patch \
+    bca47a5a51ef32f562b470fa330876862c6bc29c89b4c16ae2ea1edc46f703cb"
+  "windows ${0:a:h}/patches/mbedtls/0002-enable-dtls-srtp-support.patch \
+    bca47a5a51ef32f562b470fa330876862c6bc29c89b4c16ae2ea1edc46f703cb"
 )
 
 ## Dependency Overrides
