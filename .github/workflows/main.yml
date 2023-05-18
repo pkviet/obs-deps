@@ -11,6 +11,7 @@ on:
       - '**.md'
     branches:
       - master
+      - charts
 
 jobs:
   ffmpeg-build:
