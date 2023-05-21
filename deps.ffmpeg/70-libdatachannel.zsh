@@ -4,8 +4,11 @@ autoload -Uz log_debug log_error log_info log_status log_output
 local name='libdatachannel'
 local version='v0.19.0-alpha.3'
 local url='https://github.com/paullouisageneau/libdatachannel.git'
-local hash='8679ca4714258a58669133bf636a29e4c896c418'
-
+local hash='506961b84c3a28ddfb722eb2bc76e2dce2d76765'
+local -a patches=(
+  "* ${0:a:h}/patches/libdatachannel/0001-Fix-mbedtls-cmake-objdump.patch \
+    728af402fe8ebf33107b65422d569f0ea4af2e1e17207fbe2fb9a8684c187385"
+)
 ## Dependency Overrides
 local -i shared_libs=1
 local dir="${name}-${version}"
