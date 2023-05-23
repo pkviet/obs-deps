@@ -43,6 +43,44 @@ function Setup-BuildParameters {
         ($VisualStudioData.DisplayName -split ' ')[-1]
     )
 
+    $script:CFlags = @()
+    $script:CxxFlags = @()
+
+    switch ( ${script:Configuration} ) {
+        Debug {
+            $script:CFlags += @(
+                '-Ob0 -Od -RTC1'
+            )
+            $script:CxxFlags += @(
+                '-Ob0 -Od -RTC1'
+            )
+        }
+        RelWithDebInfo {
+            $script:CFlags += @(
+                '-O2 -Ob1 -DNDEBUG'
+            )
+            $script:CxxFlags += @(
+                '-O2 -Ob1 -DNDEBUG'
+            )
+        }
+        Release {
+            $script:CFlags += @(
+                '-O2 -Ob2 -DNDEBUG'
+            )
+            $script:CxxFlags += @(
+                '-O2 -Ob2 -DNDEBUG'
+            )
+        }
+        MinSizeRel {
+            $script:CFlags += @(
+                '-O1 -Ob1 -DNDEBUG'
+            )
+            $script:CxxFlags += @(
+                '-O1 -Ob1 -DNDEBUG'
+            )
+        }
+    }
+
     $script:CmakeOptions = @(
         '-A', $script:ConfigData.CmakeArch
         '-G', $VisualStudioId
@@ -61,6 +99,8 @@ function Setup-BuildParameters {
 
     Log-Debug @"
 
+C flags         : $($script:CFlags)
+C++ flags       : $($script:CxxFlags)
 CMake options   : $($script:CmakeOptions)
 Multi-process   : ${NumProcessors}
 "@
