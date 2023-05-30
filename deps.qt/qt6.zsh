@@ -18,6 +18,9 @@ local -a qt_components=(
   'qtshadertools'
   'qtmultimedia'
   'qtsvg'
+  'qtopengl'
+  'qtopenglwidgets'
+  'qtcharts'
 )
 
 local dir='qt6'
