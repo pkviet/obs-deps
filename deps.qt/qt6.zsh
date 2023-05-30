@@ -18,8 +18,6 @@ local -a qt_components=(
   'qtshadertools'
   'qtmultimedia'
   'qtsvg'
-  'qtopengl'
-  'qtopenglwidgets'
   'qtcharts'
 )
 

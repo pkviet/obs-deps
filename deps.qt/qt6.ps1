@@ -30,7 +30,7 @@ function Setup {
     # This will fail if any of the repos are dirty (uncommitted patches).
     Set-Location qt6
     $Options = @(
-        '--module-subset', 'qtbase,qtimageformats,qtmultimedia,qtshadertools,qtsvg,qtopengl,qtopenglwidgets,qtcharts'
+        '--module-subset', 'qtbase,qtimageformats,qtmultimedia,qtshadertools,qtsvg,qtcharts'
         '--force'
     )
     Invoke-External perl init-repository @Options
