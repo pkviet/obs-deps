@@ -8,6 +8,7 @@ local hash="${0:a:h}/checksums"
 
 local -a qt_components=(
   'qtbase'
+  'qtcharts'
   'qtimageformats'
   'qtshadertools'
   'qtmultimedia'
