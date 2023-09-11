@@ -3,6 +3,7 @@ autoload -Uz log_info log_status
 local arch
 for arch (x86_64 arm64) {
   (
+    typeset -g -A target_config=(${(kv)target_config//x86_64;arm64/${arch}})
     typeset -g arch="${arch}"
     typeset -g target="${target//universal/${arch}}"
     typeset -g -a c_flags=(${c_flags//universal/${arch}})
