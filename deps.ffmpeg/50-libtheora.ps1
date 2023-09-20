@@ -1,24 +1,22 @@
 param(
-    [string] $Name = 'mbedtls',
-    [string] $Version = '3.4.0',
-    [string] $Uri = 'https://github.com/Mbed-TLS/mbedtls.git',
-    [string] $Hash = '1873d3bfc2da771672bd8e7e8f41f57e0af77f33',
+    [string] $Name = 'libtheora',
+    [string] $Version = '1.1.1',
+    [string] $Uri = 'https://ftp.osuosl.org/pub/xiph/releases/theora/libtheora-1.1.1.zip',
+    [string] $Hash = "${PSScriptRoot}/checksums/libtheora-1.1.1.zip.sha256",
     [array] $Patches = @(
         @{
-            PatchFile = "${PSScriptRoot}/patches/mbedtls/0001-enable-dtls-srtp-support.patch"
-            HashSum = "a3f1e5af6621040ffaa358b1fa131e65a42e95a66c684f45338d80b9a76ad0f4"
+            PatchFile = "${PSScriptRoot}/patches/libtheora/0001-add-windows-cmake.patch"
+            HashSum = "9F7554581AABC81F360D040E95C1CBF935E9CD80019526B1A6951A1179524D50"
         }
-    ),
-    [switch] $ForceStatic = $true
+    )
 )
 
 function Setup {
-    Setup-Dependency -Uri $Uri -Hash $Hash -DestinationPath $Path
+    Setup-Dependency -Uri $Uri -Hash $Hash -DestinationPath .
 }
 
 function Clean {
     Set-Location $Path
-
     if ( Test-Path "build_${Target}" ) {
         Log-Information "Clean build directory (${Target})"
         Remove-Item -Path "build_${Target}" -Recurse -Force
@@ -39,27 +37,18 @@ function Configure {
     Log-Information "Configure (${Target})"
     Set-Location $Path
 
-    if ( $ForceStatic -and $script:Shared ) {
-        $Shared = $false
-    } else {
-        $Shared = $script:Shared.isPresent
-    }
-
     $OnOff = @('OFF', 'ON')
     $Options = @(
         $CmakeOptions
-        "-DUSE_SHARED_MBEDTLS_LIBRARY:BOOL=$($OnOff[$Shared])"
-        "-DUSE_STATIC_MBEDTLS_LIBRARY:BOOL=$($OnOff[$Shared -ne $true]))"
-        '-DENABLE_PROGRAMS:BOOL=OFF'
-        '-DENABLE_TESTING:BOOL=OFF'
-        '-DGEN_FILES:BOOL=OFF'
+        "-DBUILD_SHARED_LIBS:BOOL=$($OnOff[$script:Shared.isPresent])"
+        "-DCMAKE_C_FLAGS=-wd4700"
     )
 
     Invoke-External cmake -S . -B "build_${Target}" @Options
 }
 
 function Build {
-    Log-Information "Build (${Target})"
+    Log-Information "Install (${Target})"
     Set-Location $Path
 
     $Options = @(
@@ -70,6 +59,7 @@ function Build {
     if ( $VerbosePreference -eq 'Continue' ) {
         $Options += '--verbose'
     }
+
     $Options += @(
         '--'
         '/consoleLoggerParameters:Summary'
@@ -77,6 +67,7 @@ function Build {
         '/p:UseMultiToolTask=true'
         '/p:EnforceProcessCountAcrossBuilds=true'
     )
+
     Invoke-External cmake @Options
 }
 

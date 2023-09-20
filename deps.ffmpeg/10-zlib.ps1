@@ -1,21 +1,35 @@
 param(
-    [string] $Name = 'libdatachannel',
-    [string] $Version = '0.19.0-alpha.4',
-    [string] $Uri = 'https://github.com/paullouisageneau/libdatachannel.git',
-    [string] $Hash = '709a66339451bb4c8d4e5ced78c67605ec09da31',
-    [switch] $ForceShared = $true
+    [string] $Name = 'zlib',
+    [string] $Version = '1.2.13',
+    [string] $Uri = 'https://github.com/madler/zlib.git',
+    [string] $Hash = "04f42ceca40f73e2978b50e93806c2a18c1281fc",
+    [array] $Patches = @(
+        @{
+            PatchFile = "${PSScriptRoot}/patches/zlib/0001-fix-unistd-detection.patch"
+            HashSum = "2114ff9ebfc79765019353b06915a09f4dc4802ce722d2df6e640a59666dd875"
+        }
+    )
 )
 
 function Setup {
-    Invoke-GitCheckout -Uri $Uri -Commit $Hash
+    Setup-Dependency -Uri $Uri -Hash $Hash -DestinationPath $Path
 }
 
 function Clean {
     Set-Location $Path
-
     if ( Test-Path "build_${Target}" ) {
         Log-Information "Clean build directory (${Target})"
         Remove-Item -Path "build_${Target}" -Recurse -Force
+    }
+}
+
+function Patch {
+    Log-Information "Patch (${Target})"
+    Set-Location $Path
+
+    $Patches | ForEach-Object {
+        $Params = $_
+        Safe-Patch @Params
     }
 }
 
@@ -23,20 +37,10 @@ function Configure {
     Log-Information "Configure (${Target})"
     Set-Location $Path
 
-   if ( $ForceShared -and ( $script:Shared -eq $false ) ) {
-        $Shared = $true
-    } else {
-        $Shared = $script:Shared.isPresent
-    }
-
     $OnOff = @('OFF', 'ON')
     $Options = @(
         $CmakeOptions
-        "-DENABLE_SHARED:BOOL=$($OnOff[$Shared])"
-        '-DUSE_MBEDTLS=BOOL=ON'
-        '-DNO_WEBSOCKET=BOOL=ON'
-        '-DNO_TESTS=BOOL=ON'
-        '-DNO_EXAMPLES=BOOL=ON'
+        '-DZ_HAVE_UNISTD_H:BOOL=OFF'
     )
 
     Invoke-External cmake -S . -B "build_${Target}" @Options
