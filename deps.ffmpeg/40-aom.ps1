@@ -4,6 +4,12 @@ param(
     [string] $Uri = 'https://aomedia.googlesource.com/aom.git',
     [string] $Hash = 'd772e334cc724105040382a977ebb10dfd393293',
     [array] $Targets = @('x64', 'arm64'),
+    [array] $Patches = @(
+        @{
+            PatchFile = "${PSScriptRoot}/patches/aom/0002-windows-fix-cmake-nasm-detection.patch"
+            HashSum = "7a6937b6441c9c43e8b25019e24d263c9058e6c85fe7802b9541f2dd179f99c6"
+        }
+    ),
     [array] $FixupPatches = @(
         @{
             PatchFile = "${PSScriptRoot}/patches/aom/0001-windows-pkg-config-fix.patch"
@@ -25,6 +31,16 @@ function Clean {
     if ( Test-Path "build_${Target}" ) {
         Log-Information "Clean build directory (${Target})"
         Remove-Item -Path "build_${Target}" -Recurse -Force
+    }
+}
+
+function Patch {
+    Log-Information "Patch (${Target})"
+    Set-Location $Path
+
+    $Patches | ForEach-Object {
+        $Params = $_
+        Safe-Patch @Params
     }
 }
 
